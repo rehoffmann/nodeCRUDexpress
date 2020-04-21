@@ -4,7 +4,7 @@ const app = express();
 const MongoClient = require('mongodb').MongoClient
 
 
-
+app.set('view engine', 'ejs')
 app.listen(3000, function() {
     console.log('listening on 3000')
   })
@@ -13,15 +13,26 @@ app.listen(3000, function() {
   .then(client => {
     console.log('Connected to Database')
     const db = client.db('testserver')
+    const testCollection = db.collection('test')
     app.use(bodyParser.urlencoded({ extended: true }))
 
     app.get('/', (req, res) => {
-      res.sendFile(__dirname + '/index.html')
+      db.collection('test').find().toArray()
+      .then(results => {
+        console.log(results)
+        res.render('index.ejs', {test:results})
+      })
+      .catch(error => console.error(error))
+      
     })
   
     app.post('/quotes', (req, res) => {
-      console.log(req.body)
-    }) 
+        testCollection.insertOne(req.body)
+          .then(result => {
+            res.redirect('/')
+          })
+          .catch(error => console.error(error))
+      })
   })
   .catch(error => console.error(error))
 
